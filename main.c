@@ -81,7 +81,7 @@ void irc_send(int sock, char *message)
 	m[min+1] = 0x0A;
 	m[min+2] = '\n';
 
-	printf("\n> Out : '%s'\n", m);
+	printf("\n> Out : '%s'", m);
 	if(send(sock, m, min+2, 0) < 0)
 	{
 		perror("send()");
@@ -94,6 +94,7 @@ int main(int argc, char **argv)
 	int sock;
 	int n;
 	pthread_t threadIrcRcv;
+	char buffer[IRC_MESSAGE_MAXLEN-1];
 
 	sock = irc_init("verne.freenode.net");
 	if(pthread_create(&threadIrcRcv, NULL, irc_rcv, &sock))
@@ -104,6 +105,14 @@ int main(int argc, char **argv)
 
 	irc_send(sock, "NICK kiwi_0xTest");
 	irc_send(sock, "USER 0x010C 0x010C verne.freenode.net :0x010C");
+	
+	do
+	{
+		fgets(buffer, IRC_MESSAGE_MAXLEN-2, stdin);
+		char *p = strchr(buffer, '\n');
+		*p = '\0';
+		irc_send(sock, buffer);
+	} while(buffer[0] != '\0');
 	
 	pthread_join(threadIrcRcv, NULL);
 	
